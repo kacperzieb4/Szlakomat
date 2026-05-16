@@ -12,11 +12,13 @@ public class InMemoryProjectionRepository : IProjectionRepository
 
     public Task<UserCategoryProjection?> GetAsync(Guid userId, string category, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        _projections.TryGetValue(GetKey(userId, category), out var projection);
+        return Task.FromResult(projection);
     }
 
     public Task SaveAsync(UserCategoryProjection projection, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        _projections[GetKey(projection.UserId, projection.Category)] = projection;
+        return Task.CompletedTask;
     }
 }
