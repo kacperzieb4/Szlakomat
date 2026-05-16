@@ -10,16 +10,27 @@ public class InMemoryEventStore : IEventStore
     
     public Task SaveAsync(UserEvent userEvent, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        _events.Add(userEvent);
+        return Task.CompletedTask;
     }
 
     public Task<IEnumerable<UserEvent>> GetForUserCategoryAsync(Guid userId, string category, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var userEvents = _events
+            .Where(e => e.UserId == userId && e.Category == category)
+            .OrderBy(e => e.OccurredAt)
+            .AsEnumerable();
+            
+        return Task.FromResult(userEvents);
     }
 
     public Task<IEnumerable<UserEvent>> GetForUserCategorySinceAsync(Guid userId, string category, DateTime since, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var userEvents = _events
+            .Where(e => e.UserId == userId && e.Category == category && e.OccurredAt >= since)
+            .OrderBy(e => e.OccurredAt)
+            .AsEnumerable();
+            
+        return Task.FromResult(userEvents);
     }
 }
