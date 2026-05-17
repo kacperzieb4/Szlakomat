@@ -36,7 +36,7 @@ public class ProjectionService : IProjectionService
             Purchases90Days = events90Days.Count(e => e.Type == EventType.Purchase)
         };
         
-        // We'll approximate rating using HighRating and LowRating.
+        // approximate rating using HighRating and LowRating.
         var highRatings = events90Days.Count(e => e.Type == EventType.HighRating);
         var lowRatings = events90Days.Count(e => e.Type == EventType.LowRating);
         
