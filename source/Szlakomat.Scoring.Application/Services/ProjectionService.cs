@@ -15,9 +15,10 @@ public class ProjectionService : IProjectionService
         _projectionRepository = projectionRepository;
     }
 
-    public Task ApplyAsync(UserEvent evt, CancellationToken cancellationToken = default)
+    public async Task ApplyAsync(UserEvent evt, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await _eventStore.SaveAsync(evt, cancellationToken);
+        await RebuildProjectionAsync(evt.UserId, evt.Category, cancellationToken);
     }
 
     public Task RebuildProjectionAsync(Guid userId, string category, CancellationToken cancellationToken = default)
