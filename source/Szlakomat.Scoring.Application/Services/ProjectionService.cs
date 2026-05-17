@@ -21,8 +21,30 @@ public class ProjectionService : IProjectionService
         await RebuildProjectionAsync(evt.UserId, evt.Category, cancellationToken);
     }
 
-    public Task RebuildProjectionAsync(Guid userId, string category, CancellationToken cancellationToken = default)
+    public async Task RebuildProjectionAsync(Guid userId, string category, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var now = DateTime.UtcNow;
+        var events90Days = await _eventStore.GetForUserCategorySinceAsync(userId, category, now.AddDays(-90), cancellationToken);
+        var events30Days = events90Days.Where(e => e.OccurredAt >= now.AddDays(-30)).ToList();
+        
+        var projection = new UserCategoryProjection
+        {
+            UserId = userId,
+            Category = category,
+            Clicks30Days = events30Days.Count(e => e.Type == EventType.Click),
+            Skips30Days = events30Days.Count(e => e.Type == EventType.Skip),
+            Purchases90Days = events90Days.Count(e => e.Type == EventType.Purchase)
+        };
+        
+        // We'll approximate rating using HighRating and LowRating.
+        var highRatings = events90Days.Count(e => e.Type == EventType.HighRating);
+        var lowRatings = events90Days.Count(e => e.Type == EventType.LowRating);
+        
+        var totalRatings = highRatings + lowRatings;
+        projection.AverageRating = totalRatings > 0 
+            ? ((highRatings * 5.0) + (lowRatings * 1.0)) / totalRatings 
+            : 0.0;
+            
+        await _projectionRepository.SaveAsync(projection, cancellationToken);
     }
 }
