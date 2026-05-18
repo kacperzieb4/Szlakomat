@@ -6,23 +6,29 @@ namespace Szlakomat.Scoring.Application.Services;
 public class ScoreCalculationService
 {
     private readonly IScoreAlgebra _algebra;
+    private readonly IScoreNormalizer _normalizer;
 
-    public ScoreCalculationService(IScoreAlgebra algebra)
+    public ScoreCalculationService(IScoreAlgebra algebra, IScoreNormalizer normalizer)
     {
         _algebra = algebra;
+        _normalizer = normalizer;
     }
 
     public ScoreResult CalculateFinalScore()
     {
-        // Tutaj docelowo zintegrujemy Projekcje (Osoba 2) i Drzewo AST (Osoba 3).
-        // Na ten moment zwracamy mocka.
+        // Poniższa wartość zostanie w przyszłości zastąpiona wynikiem ewaluacji reguł AST i projekcji.
+        double rawScore = 50.0;
+
+        // Normalizacja wyniku: zabezpieczenie przed wartościami spoza przedziału 0.0 - 1.0.
+        // Każdy wyliczony wynik bezwzględnie przechodzi przez warstwę normalizacji.
+        double finalNormalizedScore = _normalizer.Normalize(rawScore);
 
         var result = new ScoreResult 
         { 
-            Score = 0.5 
+            Score = finalNormalizedScore 
         };
 
-        result.Explanations.Add(new ScoreExplanation { Reason = "Zalążek kalkulacji scoringu." });
+        result.Explanations.Add(new ScoreExplanation { Reason = "Przykładowe uzasadnienie wyniku bazowego." });
 
         return result;
     }
