@@ -8,7 +8,7 @@ using Szlakomat.Scoring.Domain.Rules;
 
 namespace Szlakomat.Scoring.Application.Services;
 
-public class ScoreCalculationService
+public class ScoreCalculationService : IScoreCalculationService
 {
     private readonly IScoreAlgebra _algebra;
     private readonly IScoreNormalizer _normalizer;
