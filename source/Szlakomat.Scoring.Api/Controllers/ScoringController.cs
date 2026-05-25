@@ -1,8 +1,10 @@
-using MediatR;
+using System;
+using System.Threading.Tasks;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
-using Szlakomat.Scoring.Application.Commands;
 using Szlakomat.Scoring.Application.DTO;
-using Szlakomat.Scoring.Application.Queries;
+using Szlakomat.Scoring.Application.Mappers;
+using Szlakomat.Scoring.Application.Services;
 
 namespace Szlakomat.Scoring.Api.Controllers;
 
@@ -10,24 +12,35 @@ namespace Szlakomat.Scoring.Api.Controllers;
 [Route("api/scoring")]
 public class ScoringController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IProjectionService _projectionService;
+    private readonly IScoreService _scoreService;
+    private readonly IEventMapper _eventMapper;
+    private readonly IValidator<RegisterUserEventRequest> _validator;
 
-    public ScoringController(IMediator mediator)
+    public ScoringController(
+        IProjectionService projectionService,
+        IScoreService scoreService,
+        IEventMapper eventMapper,
+        IValidator<RegisterUserEventRequest> validator)
     {
-        _mediator = mediator;
+        _projectionService = projectionService;
+        _scoreService = scoreService;
+        _eventMapper = eventMapper;
+        _validator = validator;
     }
 
     [HttpPost("events")]
     public async Task<IActionResult> RegisterEvent(
-        RegisterUserEventRequest request)
+        [FromBody] RegisterUserEventRequest request)
     {
-        var command = new RegisterUserEventCommand(
-            request.UserId,
-            request.Category,
-            request.EventType
-        );
+        var validationResult = await _validator.ValidateAsync(request);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(validationResult.Errors);
+        }
 
-        await _mediator.Send(command);
+        var domainEvent = _eventMapper.Map(request);
+        await _projectionService.Apply(domainEvent);
 
         return Ok();
     }
@@ -37,13 +50,14 @@ public class ScoringController : ControllerBase
         Guid userId,
         string category)
     {
-        var query = new GetUserScoreQuery(
-            userId,
-            category
-        );
+        var result = await _scoreService.Calculate(userId, category);
 
-        var result = await _mediator.Send(query);
+        var response = new ScoreResponse
+        {
+            Score = result.Score,
+            Reasons = result.Reasons
+        };
 
-        return Ok(result);
+        return Ok(response);
     }
 }
