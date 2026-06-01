@@ -19,18 +19,15 @@ builder.Services.AddScoringApplication();
 builder.Services.AddScoringInfrastructure();
 
 builder.Services.AddScoped<IEventMapper, EventMapper>();
-builder.Services.AddScoped<IScoringCalculator, DefaultScoringCalculator>();
+builder.Services.AddScoped<IScoringCalculator, FuzzyAstScoringCalculator>();
 builder.Services.AddScoped<IScoreService, ScoreService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterUserEventRequestValidator>();
 
-// Rejestracja zależności modułu scoringowego
+// Rejestracja zależności modułu scoringowego (AST / Fuzzy)
 builder.Services.AddScoped<IScoreAlgebra, FuzzyScoreAlgebra>();
 builder.Services.AddScoped<IScoreNormalizer>(_ => new ScoreNormalizer(maxScore: 100.0));
 builder.Services.AddScoped<IScoreCalculationService, ScoreCalculationService>();
-
-// Rejestracja atrap (Stubs) - StubProjectionRepository
-builder.Services.AddScoped<IProjectionRepository, Szlakomat.Scoring.Application.Stubs.StubProjectionRepository>();
 
 // Rejestracja drzewa reguł AST — buduje composite tree z fuzzy nodes
 builder.Services.AddScoped<IRuleNode>(sp =>
