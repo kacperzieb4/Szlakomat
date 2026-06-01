@@ -40,7 +40,7 @@ public class ScoringController : ControllerBase
         }
 
         var domainEvent = _eventMapper.Map(request);
-        await _projectionService.Apply(domainEvent);
+        await _projectionService.ApplyAsync(domainEvent);
 
         return Ok();
     }
