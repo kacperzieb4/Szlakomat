@@ -263,8 +263,8 @@ public class RuleEngineTests
         var result = tree.Evaluate(projection);
 
         // Assert — powinien zwrócić wartość z przedziału [0, 1]
-        result.Should().BeGreaterOrEqualTo(0.0);
-        result.Should().BeLessOrEqualTo(1.0);
+        result.Should().BeGreaterThanOrEqualTo(0.0);
+        result.Should().BeLessThanOrEqualTo(1.0);
     }
 
     [Fact]

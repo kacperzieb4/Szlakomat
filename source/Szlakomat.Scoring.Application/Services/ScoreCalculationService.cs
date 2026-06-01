@@ -4,6 +4,7 @@ using Szlakomat.Scoring.Domain.Explanation;
 using Szlakomat.Scoring.Domain.Fuzzy;
 using Szlakomat.Scoring.Domain.Fuzzy.Nodes;
 using Szlakomat.Scoring.Domain.Projections;
+using Szlakomat.Scoring.Domain.Repositories;
 using Szlakomat.Scoring.Domain.Rules;
 
 namespace Szlakomat.Scoring.Application.Services;
@@ -30,7 +31,8 @@ public class ScoreCalculationService : IScoreCalculationService
     public async Task<ScoreResult> CalculateFinalScoreAsync(Guid userId, string category)
     {
         // Pobranie danych profilu aktywności użytkownika
-        var projection = await _projections.GetAsync(userId, category);
+        var projection = await _projections.GetAsync(userId, category) 
+                         ?? new UserCategoryProjection { UserId = userId, Category = category };
 
         // Ewaluacja drzewa reguł AST
         double rawScore = _ruleTree.Evaluate(projection);
