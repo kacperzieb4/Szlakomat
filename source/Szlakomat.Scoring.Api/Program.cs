@@ -26,7 +26,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<RegisterUserEventRequestVal
 
 // Rejestracja zależności modułu scoringowego (AST / Fuzzy)
 builder.Services.AddScoped<IScoreAlgebra, FuzzyScoreAlgebra>();
-builder.Services.AddScoped<IScoreNormalizer>(_ => new ScoreNormalizer(maxScore: 100.0));
+builder.Services.AddScoped<IScoreNormalizer>(_ => new ScoreNormalizer(maxScore: 1.0));
 builder.Services.AddScoped<IScoreCalculationService, ScoreCalculationService>();
 
 // Rejestracja drzewa reguł AST — buduje composite tree z fuzzy nodes
