@@ -6,6 +6,7 @@ using Szlakomat.Scoring.Domain.Fuzzy.Nodes;
 using Szlakomat.Scoring.Domain.Projections;
 using Szlakomat.Scoring.Domain.Repositories;
 using Szlakomat.Scoring.Domain.Rules;
+using Szlakomat.Scoring.Domain.ValueObjects;
 
 namespace Szlakomat.Scoring.Application.Services;
 
@@ -28,11 +29,11 @@ public class ScoreCalculationService : IScoreCalculationService
         _ruleTree = ruleTree;
     }
 
-    public async Task<ScoreResult> CalculateFinalScoreAsync(Guid userId, string category)
+    public async Task<ScoreResult> CalculateFinalScoreAsync(Guid userId, TrailCategory category)
     {
         // Pobranie danych profilu aktywności użytkownika
         var projection = await _projections.GetAsync(userId, category) 
-                         ?? new UserCategoryProjection { UserId = userId, Category = category };
+                         ?? new UserCategoryProjection(userId, category);
 
         // Ewaluacja drzewa reguł AST
         double rawScore = _ruleTree.Evaluate(projection);
@@ -48,13 +49,13 @@ public class ScoreCalculationService : IScoreCalculationService
         // Dynamiczne budowanie wyjaśnień składowych oceny
         result.Explanations.Add(new ScoreExplanation 
         { 
-            Reason = $"Poziom aktywności kliknięć ({projection.Clicks30Days}/10 w 30 dni).",
+            Reason = $"Poziom aktywności kliknięć ({projection.RecentClicks}/10 w 30 dni).",
             Contribution = new FuzzyClicksNode().Evaluate(projection)
         });
 
         result.Explanations.Add(new ScoreExplanation 
         { 
-            Reason = $"Zaangażowanie finansowe ({projection.Purchases90Days}/5 zakupów w 90 dni).",
+            Reason = $"Zaangażowanie finansowe ({projection.HistoryPurchases}/5 zakupów w 90 dni).",
             Contribution = new FuzzyPurchasesNode().Evaluate(projection)
         });
 
@@ -66,7 +67,7 @@ public class ScoreCalculationService : IScoreCalculationService
 
         result.Explanations.Add(new ScoreExplanation 
         { 
-            Reason = $"Wskaźnik braku znudzenia ({projection.Skips30Days}/10 pominięć w 30 dni).",
+            Reason = $"Wskaźnik braku znudzenia ({projection.RecentSkips}/10 pominięć w 30 dni).",
             Contribution = new FuzzySkipsNode().Evaluate(projection)
         });
 
