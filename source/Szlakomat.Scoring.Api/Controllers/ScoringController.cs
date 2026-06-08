@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Szlakomat.Scoring.Application.DTO;
 using Szlakomat.Scoring.Application.Mappers;
 using Szlakomat.Scoring.Application.Services;
+using Szlakomat.Scoring.Domain.ValueObjects;
 
 namespace Szlakomat.Scoring.Api.Controllers;
 
@@ -50,7 +51,8 @@ public class ScoringController : ControllerBase
         Guid userId,
         string category)
     {
-        var result = await _scoreService.Calculate(userId, category);
+        var trailCategory = new TrailCategory(category);
+        var result = await _scoreService.Calculate(userId, trailCategory);
 
         var response = new ScoreResponse
         {
