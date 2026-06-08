@@ -1,8 +1,11 @@
 using System;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Szlakomat.Scoring.Application.Services;
 using Szlakomat.Scoring.Application.Stubs;
 using Szlakomat.Scoring.Domain.Fuzzy;
+using Szlakomat.Scoring.Domain.ValueObjects;
+using Xunit;
 
 namespace Szlakomat.Scoring.Domain.Tests;
 
@@ -19,7 +22,7 @@ public class ScoreCalculationServiceTests
 
         var service = new ScoreCalculationService(algebra, normalizer, projections, ruleTree);
         var userId = Guid.NewGuid();
-        const string category = "Szlaki Górskie";
+        var category = new TrailCategory("Szlaki Górskie");
 
         // Act
         var result = await service.CalculateFinalScoreAsync(userId, category);

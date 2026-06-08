@@ -4,9 +4,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Szlakomat.Scoring.Application.Services;
+using Szlakomat.Scoring.Domain.Events;
 using Szlakomat.Scoring.Domain.Projections;
 using Szlakomat.Scoring.Domain.Repositories;
 using Szlakomat.Scoring.Domain.Scoring;
+using Szlakomat.Scoring.Domain.ValueObjects;
 using Xunit;
 
 namespace Szlakomat.Scoring.Domain.Tests;
@@ -27,7 +29,7 @@ public class ScoreServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var category = "Hiking";
+        var category = new TrailCategory("Hiking");
         _repository.Projection = null;
 
         // Act
@@ -44,16 +46,16 @@ public class ScoreServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var category = "Hiking";
-        var projection = new UserCategoryProjection
-        {
-            UserId = userId,
-            Category = category,
-            Clicks30Days = 10,
-            Purchases90Days = 1,
-            Skips30Days = 2,
-            AverageRating = 4.0
-        };
+        var category = new TrailCategory("Hiking");
+        
+        var projection = UserCategoryProjection.Restore(
+            userId: userId, 
+            category: category, 
+            recentClicks: 10, 
+            historyPurchases: 1, 
+            recentSkips: 2, 
+            averageRating: 5.0);
+        
         _repository.Projection = projection;
 
         // Act
@@ -64,17 +66,17 @@ public class ScoreServiceTests
         result.Should().NotBeNull();
         result.Score.Should().BeApproximately(0.50, 0.001);
         result.Reasons.Should().HaveCount(2);
-        result.Reasons[0].Should().Contain("10 clicks");
-        result.Reasons[0].Should().Contain("1 purchases");
-        result.Reasons[0].Should().Contain("2 skips");
-        result.Reasons[1].Should().Contain("4.00");
+        result.Reasons[0].Should().Contain("10 recent clicks");
+        result.Reasons[0].Should().Contain("1 historical purchases");
+        result.Reasons[0].Should().Contain("2 recent skips");
+        result.Reasons[1].Should().Contain("5.00"); // 4 HighRatings = 5.0 avg
     }
 
     private class FakeProjectionRepository : IProjectionRepository
     {
         public UserCategoryProjection? Projection { get; set; }
 
-        public Task<UserCategoryProjection?> GetAsync(Guid userId, string category, CancellationToken cancellationToken = default)
+        public Task<UserCategoryProjection?> GetAsync(Guid userId, TrailCategory category, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(Projection);
         }
